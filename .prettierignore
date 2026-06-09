@@ -1,0 +1,5 @@
+package-lock.json
+.next
+.pglite
+drizzle/meta
+src/components/ui
