@@ -1,0 +1,18 @@
+[
+  { "question": "At what age should I start colorectal cancer screening?", "expected": "colorectal-cancer-screening" },
+  { "question": "How often do I need a mammogram?", "expected": "breast-cancer-screening" },
+  { "question": "Who qualifies for low-dose CT lung screening?", "expected": "lung-cancer-screening" },
+  { "question": "How often should I get a Pap test in my twenties?", "expected": "cervical-cancer-screening" },
+  { "question": "Should blood pressure be confirmed with home readings before treatment?", "expected": "hypertension-screening" },
+  { "question": "Who should be tested for type 2 diabetes?", "expected": "prediabetes-diabetes-screening" },
+  { "question": "When is a statin recommended to prevent heart attacks?", "expected": "statin-primary-prevention" },
+  { "question": "Ultrasound for aortic aneurysm in men who smoked", "expected": "abdominal-aortic-aneurysm-screening" },
+  { "question": "Do women need a bone density DXA scan?", "expected": "osteoporosis-screening" },
+  { "question": "Which questionnaires are used to screen for depression and anxiety?", "expected": "depression-anxiety-screening" },
+  { "question": "How many drinks in a day counts as risky drinking?", "expected": "unhealthy-alcohol-use" },
+  { "question": "What medications help people quit smoking?", "expected": "tobacco-cessation" },
+  { "question": "What ages should be tested for hepatitis C?", "expected": "hiv-hepatitis-c-screening" },
+  { "question": "When should adults get the shingles vaccine?", "expected": "adult-vaccines" },
+  { "question": "Is Tdap recommended during pregnancy?", "expected": "adult-vaccines" },
+  { "question": "At what age is the pneumococcal vaccine recommended?", "expected": "adult-vaccines" }
+]
