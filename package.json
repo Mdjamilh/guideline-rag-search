@@ -13,7 +13,8 @@
     "test:watch": "vitest",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
-    "ingest": "tsx scripts/ingest.mts"
+    "ingest": "tsx scripts/ingest.ts",
+    "eval": "tsx scripts/eval.ts"
   },
   "dependencies": {
     "@electric-sql/pglite": "^0.3.8",
