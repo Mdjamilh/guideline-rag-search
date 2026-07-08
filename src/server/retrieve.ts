@@ -1,8 +1,9 @@
-import { and, asc, cosineDistance, desc, eq, isNotNull, sql } from "drizzle-orm";
+import { and, asc, cosineDistance, count, desc, eq, isNotNull, sql } from "drizzle-orm";
 
 import { chunks, documents } from "@/db/schema";
 import type { Database } from "@/db/types";
 import { reciprocalRankFusion } from "@/lib/rrf";
+import { expandQuery } from "@/lib/synonyms";
 
 export type Passage = {
   id: string;
@@ -28,12 +29,41 @@ export type RetrievalResult = {
 const CANDIDATES = 12;
 
 /**
- * Keyword retrieval over the generated tsvector. Questions rarely contain all
- * their words in one passage, so the query's lexemes are OR-ed together and
- * ts_rank_cd rewards passages that match more of them, closer together.
+ * IDF weight of each query lexeme, from Postgres's own term statistics.
+ * Rare words ("mammogram") end up counting far more than common ones
+ * ("often", "need"). ts_stat scans the table, which is fine for a corpus of
+ * this size; a large corpus would keep these statistics in a materialized view.
  */
-export async function keywordSearch(db: Database, query: string, limit = CANDIDATES): Promise<Passage[]> {
-  const tsquery = sql`nullif(replace(plainto_tsquery('english', ${query})::text, '&', '|'), '')::tsquery`;
+async function lexemeWeights(db: Database, query: string): Promise<{ lexeme: string; idf: number }[]> {
+  const [{ total }] = await db.select({ total: count() }).from(chunks);
+  if (total === 0) return [];
+  return db
+    .select({
+      lexeme: sql<string>`s.word`,
+      idf: sql<number>`ln(${total}::float / s.ndoc) + 1`.mapWith(Number),
+    })
+    .from(sql`ts_stat('SELECT search_vector FROM chunks') AS s`)
+    .where(sql`s.word = ANY(tsvector_to_array(to_tsvector('english', ${query})))`);
+}
+
+/**
+ * Keyword retrieval over the generated tsvector. Questions rarely contain all
+ * their words in one passage, so each matched query word adds its IDF weight
+ * (a BM25-style score without length normalization); ts_rank_cd breaks ties.
+ */
+export async function keywordSearch(db: Database, rawQuery: string, limit = CANDIDATES): Promise<Passage[]> {
+  const query = expandQuery(rawQuery);
+  const weights = await lexemeWeights(db, query);
+  if (weights.length === 0) return [];
+
+  const tsquery = sql`replace(plainto_tsquery('english', ${query})::text, '&', '|')::tsquery`;
+  const score = sql.join(
+    weights.map(
+      (w) =>
+        sql`(case when ${chunks.searchVector} @@ to_tsquery('simple', ${w.lexeme}) then ${w.idf}::float8 else 0.0 end)`,
+    ),
+    sql` + `,
+  );
   return db
     .select({
       id: chunks.id,
@@ -50,7 +80,7 @@ export async function keywordSearch(db: Database, query: string, limit = CANDIDA
     .from(chunks)
     .innerJoin(documents, eq(documents.slug, chunks.slug))
     .where(sql`${chunks.searchVector} @@ ${tsquery}`)
-    .orderBy(desc(sql`ts_rank_cd(${chunks.searchVector}, ${tsquery}, 32)`), asc(chunks.id))
+    .orderBy(desc(score), desc(sql`ts_rank_cd(${chunks.searchVector}, ${tsquery}, 32)`), asc(chunks.id))
     .limit(limit);
 }
 
