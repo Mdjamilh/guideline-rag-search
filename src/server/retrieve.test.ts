@@ -66,7 +66,7 @@ describe("retrieve", () => {
 });
 
 describe("retrieval evaluation (keyword mode)", () => {
-  it("meets the recall@3 and MRR quality bar on the eval set", async () => {
+  it("meets the recall and MRR quality bar on the eval set", async () => {
     const cases = await loadEvalSet();
     const results: EvalResult[] = [];
     for (const c of cases) {
@@ -76,7 +76,8 @@ describe("retrieval evaluation (keyword mode)", () => {
 
     const misses = results.filter((r) => r.rank === null || r.rank > 3).map((r) => r.question);
     expect(recallAtK(results, 3), `missed: ${misses.join(" | ")}`).toBeGreaterThanOrEqual(0.85);
-    expect(meanReciprocalRank(results)).toBeGreaterThanOrEqual(0.75);
+    expect(recallAtK(results, 1), `missed at rank 1: ${misses.join(" | ")}`).toBeGreaterThanOrEqual(0.9);
+    expect(meanReciprocalRank(results)).toBeGreaterThanOrEqual(0.9);
   });
 });
 
