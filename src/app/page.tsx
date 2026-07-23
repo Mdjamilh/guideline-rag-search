@@ -1,70 +1,95 @@
-import Image from "next/image";
+import { ArrowRightIcon, BookOpenCheckIcon, LibraryIcon, QuoteIcon, SearchCheckIcon } from "lucide-react";
+import Link from "next/link";
 
-export default function Home() {
+import { EXAMPLE_QUESTIONS } from "@/components/ask-experience";
+import { Button } from "@/components/ui/button";
+import { getOllama } from "@/server/ollama";
+import { libraryStats } from "@/server/library";
+
+export const dynamic = "force-dynamic";
+
+const STEPS = [
+  {
+    icon: SearchCheckIcon,
+    title: "Hybrid retrieval",
+    body: "Your question is matched against every guideline passage with full-text search and, when available, semantic vector search, then the results are fused.",
+  },
+  {
+    icon: QuoteIcon,
+    title: "Grounded, cited answers",
+    body: "A local LLM answers using only the retrieved passages. Every sentence cites its source, and invalid citations are dropped.",
+  },
+  {
+    icon: LibraryIcon,
+    title: "Check the source",
+    body: "Each citation opens the exact section it came from, with a link to the official recommendation.",
+  },
+];
+
+export default async function HomePage() {
+  const stats = await libraryStats();
+  const aiEnabled = Boolean(getOllama());
+
   return (
-    <div className="grid min-h-screen grid-rows-[20px_1fr_20px] items-center justify-items-center gap-16 p-8 pb-20 font-sans sm:p-20">
-      <main className="row-start-2 flex flex-col items-center gap-[32px] sm:items-start">
-        <Image className="dark:invert" src="/next.svg" alt="Next.js logo" width={180} height={38} priority />
-        <ol className="list-inside list-decimal text-center font-mono text-sm/6 sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="rounded bg-black/[.05] px-1 py-0.5 font-mono font-semibold dark:bg-white/[.06]">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">Save and see your changes instantly.</li>
-        </ol>
-
-        <div className="flex flex-col items-center gap-4 sm:flex-row">
-          <a
-            className="bg-foreground text-background flex h-10 items-center justify-center gap-2 rounded-full border border-solid border-transparent px-4 text-sm font-medium transition-colors hover:bg-[#383838] sm:h-12 sm:w-auto sm:px-5 sm:text-base dark:hover:bg-[#ccc]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image className="dark:invert" src="/vercel.svg" alt="Vercel logomark" width={20} height={20} />
-            Deploy now
-          </a>
-          <a
-            className="flex h-10 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-4 text-sm font-medium transition-colors hover:border-transparent hover:bg-[#f2f2f2] sm:h-12 sm:w-auto sm:px-5 sm:text-base md:w-[158px] dark:border-white/[.145] dark:hover:bg-[#1a1a1a]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+    <div className="space-y-16">
+      <section className="mx-auto max-w-3xl pt-6 text-center">
+        <p className="bg-card text-muted-foreground mb-5 inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-medium">
+          <BookOpenCheckIcon className="text-primary size-3.5" />
+          {stats.documents} guidelines · {stats.passages} indexed passages
+        </p>
+        <h1 className="text-4xl font-semibold tracking-tight text-balance sm:text-5xl">
+          Answers about preventive care, with the receipts.
+        </h1>
+        <p className="text-muted-foreground mx-auto mt-4 max-w-2xl text-lg">
+          Ask about cancer screening, heart health or adult vaccines and get a short answer where every claim links back
+          to the guideline it came from.
+        </p>
+        <div className="mt-8 flex flex-wrap justify-center gap-3">
+          <Button size="lg" asChild>
+            <Link href="/ask">
+              Ask a question <ArrowRightIcon />
+            </Link>
+          </Button>
+          <Button size="lg" variant="outline" asChild>
+            <Link href="/guidelines">Browse guidelines</Link>
+          </Button>
         </div>
-      </main>
-      <footer className="row-start-3 flex flex-wrap items-center justify-center gap-[24px]">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image aria-hidden src="/file.svg" alt="File icon" width={16} height={16} />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image aria-hidden src="/window.svg" alt="Window icon" width={16} height={16} />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image aria-hidden src="/globe.svg" alt="Globe icon" width={16} height={16} />
-          Go to nextjs.org →
-        </a>
-      </footer>
+        {!aiEnabled && (
+          <p className="text-muted-foreground mt-4 text-xs">
+            This deployment runs search-only. Generated answers need a local Ollama model.
+          </p>
+        )}
+      </section>
+
+      <section aria-label="How it works" className="grid gap-4 md:grid-cols-3">
+        {STEPS.map((step) => (
+          <div key={step.title} className="bg-card rounded-xl border p-6">
+            <span className="bg-primary/10 text-primary flex size-10 items-center justify-center rounded-lg">
+              <step.icon className="size-5" />
+            </span>
+            <h2 className="mt-4 font-semibold">{step.title}</h2>
+            <p className="text-muted-foreground mt-1 text-sm">{step.body}</p>
+          </div>
+        ))}
+      </section>
+
+      <section aria-labelledby="examples-heading" className="bg-card rounded-2xl border p-6">
+        <h2 id="examples-heading" className="mb-4 font-semibold">
+          Popular questions
+        </h2>
+        <ul className="grid gap-2 sm:grid-cols-2">
+          {EXAMPLE_QUESTIONS.map((q) => (
+            <li key={q}>
+              <Link
+                href={`/ask?q=${encodeURIComponent(q)}`}
+                className="hover:bg-accent flex items-center justify-between gap-3 rounded-lg px-3 py-2 text-sm transition-colors"
+              >
+                {q} <ArrowRightIcon className="text-muted-foreground size-4 shrink-0" />
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </section>
     </div>
   );
 }
