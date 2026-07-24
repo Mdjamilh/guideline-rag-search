@@ -1,8 +1,8 @@
 import { ArrowRightIcon, BookOpenCheckIcon, LibraryIcon, QuoteIcon, SearchCheckIcon } from "lucide-react";
 import Link from "next/link";
 
-import { EXAMPLE_QUESTIONS } from "@/components/ask-experience";
 import { Button } from "@/components/ui/button";
+import { EXAMPLE_QUESTIONS } from "@/lib/examples";
 import { getOllama } from "@/server/ollama";
 import { libraryStats } from "@/server/library";
 

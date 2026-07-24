@@ -8,16 +8,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAsk } from "@/hooks/use-ask";
 import { citedSources } from "@/lib/citations";
+import { EXAMPLE_QUESTIONS } from "@/lib/examples";
 import { AnswerPanel } from "./answer-panel";
 import { SourceList } from "./source-list";
-
-export const EXAMPLE_QUESTIONS = [
-  "When should I start colorectal cancer screening?",
-  "How often do I need a mammogram?",
-  "Who should get lung cancer screening?",
-  "When should adults get the shingles vaccine?",
-  "Is Tdap recommended during pregnancy?",
-];
 
 export function AskExperience() {
   const router = useRouter();
