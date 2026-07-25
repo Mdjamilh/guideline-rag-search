@@ -50,7 +50,11 @@ async function connect(): Promise<Database> {
 
   const inMemory =
     process.env.VERCEL || process.env.PGLITE_IN_MEMORY === "1" || process.env.NEXT_PHASE === "phase-production-build";
-  const client = new PGlite(inMemory ? undefined : path.join(process.cwd(), ".pglite"), { extensions: { vector } });
+  // Single options object: with \`new PGlite(undefined, options)\` the options are ignored.
+  const client = new PGlite({
+    dataDir: inMemory ? undefined : path.join(process.cwd(), ".pglite"),
+    extensions: { vector },
+  });
   const db = drizzle(client, { schema });
   await migrate(db, { migrationsFolder: path.join(process.cwd(), "drizzle") });
   await ingestIfEmpty(db);
