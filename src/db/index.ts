@@ -50,7 +50,7 @@ async function connect(): Promise<Database> {
 
   const inMemory =
     process.env.VERCEL || process.env.PGLITE_IN_MEMORY === "1" || process.env.NEXT_PHASE === "phase-production-build";
-  // Single options object: with \`new PGlite(undefined, options)\` the options are ignored.
+  // Single options object: with `new PGlite(undefined, options)` the options are ignored.
   const client = new PGlite({
     dataDir: inMemory ? undefined : path.join(process.cwd(), ".pglite"),
     extensions: { vector },
