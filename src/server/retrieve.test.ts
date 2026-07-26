@@ -47,7 +47,8 @@ describe("keywordSearch", () => {
 
 describe("retrieve", () => {
   it("runs hybrid retrieval when an embedder is available", async () => {
-    const result = await retrieve(db, "shingles vaccine age", { embed: toyEmbed });
+    // Toy bag-of-words vectors are far less similar than real embeddings, so loosen the cutoff.
+    const result = await retrieve(db, "shingles vaccine age", { embed: toyEmbed, maxVectorDistance: 0.95 });
     expect(result.mode).toBe("hybrid");
     expect(result.passages[0].slug).toBe("adult-vaccines");
     expect(result.passages.some((p) => p.matchedBy.length === 2)).toBe(true);
@@ -92,5 +93,12 @@ describe("metrics", () => {
     expect(recallAtK(results, 3)).toBeCloseTo(2 / 3);
     expect(meanReciprocalRank(results)).toBeCloseTo((1 + 1 / 3) / 3);
     expect(firstRelevantRank(["p", "q", "x"], "x")).toBe(3);
+  });
+});
+
+describe("vector cutoff", () => {
+  it("drops semantic matches that are too distant to be related", async () => {
+    const result = await retrieve(db, "xylophone quasar", { embed: toyEmbed });
+    expect(result.passages).toEqual([]);
   });
 });

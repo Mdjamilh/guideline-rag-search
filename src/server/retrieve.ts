@@ -84,8 +84,21 @@ export async function keywordSearch(db: Database, rawQuery: string, limit = CAND
     .limit(limit);
 }
 
+/**
+ * Cosine distance above which a semantic match is treated as unrelated.
+ * Nearest-neighbour search always returns *something*, so without a cutoff a
+ * nonsense question would still get "sources". Tune per embedding model.
+ */
+export const MAX_VECTOR_DISTANCE = Number(process.env.VECTOR_MAX_DISTANCE) || 0.55;
+
 /** Nearest neighbours by cosine distance (HNSW index) among embedded chunks. */
-export async function vectorSearch(db: Database, embedding: number[], limit = CANDIDATES): Promise<Passage[]> {
+export async function vectorSearch(
+  db: Database,
+  embedding: number[],
+  limit = CANDIDATES,
+  maxDistance = MAX_VECTOR_DISTANCE,
+): Promise<Passage[]> {
+  const distance = cosineDistance(chunks.embedding, embedding);
   return db
     .select({
       id: chunks.id,
@@ -101,8 +114,8 @@ export async function vectorSearch(db: Database, embedding: number[], limit = CA
     })
     .from(chunks)
     .innerJoin(documents, eq(documents.slug, chunks.slug))
-    .where(and(isNotNull(chunks.embedding)))
-    .orderBy(cosineDistance(chunks.embedding, embedding))
+    .where(and(isNotNull(chunks.embedding), sql`${distance} < ${maxDistance}`))
+    .orderBy(distance)
     .limit(limit);
 }
 
@@ -114,7 +127,11 @@ export async function vectorSearch(db: Database, embedding: number[], limit = CA
 export async function retrieve(
   db: Database,
   query: string,
-  { embed, limit = 6 }: { embed?: (texts: string[]) => Promise<number[][]>; limit?: number } = {},
+  {
+    embed,
+    limit = 6,
+    maxVectorDistance = MAX_VECTOR_DISTANCE,
+  }: { embed?: (texts: string[]) => Promise<number[][]>; limit?: number; maxVectorDistance?: number } = {},
 ): Promise<RetrievalResult> {
   const keyword = await keywordSearch(db, query);
 
@@ -122,7 +139,7 @@ export async function retrieve(
   if (embed) {
     try {
       const [queryEmbedding] = await embed([query]);
-      vector = await vectorSearch(db, queryEmbedding);
+      vector = await vectorSearch(db, queryEmbedding, CANDIDATES, maxVectorDistance);
     } catch (error) {
       console.warn("Vector search unavailable, using keyword search only.", error);
     }
