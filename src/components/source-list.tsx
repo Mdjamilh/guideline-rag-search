@@ -8,8 +8,13 @@ import { cn } from "@/lib/utils";
 
 type Props = { passages: PublicPassage[]; cited: Set<number> };
 
-/** Strips the "Title — Heading" prefix that chunks carry for retrieval. */
-const body = (text: string) => text.split("\n").slice(1).join("\n");
+/** Strips the "Title — Heading" prefix chunks carry for retrieval, and shows list items as bullets. */
+const body = (text: string) =>
+  text
+    .split("\n")
+    .slice(1)
+    .map((line) => line.replace(/^- /, "• "))
+    .join("\n");
 
 export function SourceList({ passages, cited }: Props) {
   return (
