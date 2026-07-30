@@ -15,7 +15,8 @@
     "db:migrate": "drizzle-kit migrate",
     "ingest": "tsx scripts/ingest.ts",
     "eval": "tsx scripts/eval.ts",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "screenshots": "tsx scripts/screenshots.ts"
   },
   "dependencies": {
     "@electric-sql/pglite": "^0.3.8",
